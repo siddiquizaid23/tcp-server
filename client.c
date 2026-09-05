@@ -64,13 +64,42 @@ if(p == NULL){
 inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),s,sizeof s);
 printf("client : connected to %s\n",s);
 freeaddrinfo(servinfo);
-if ((numbytes = recv(sockfd, buf, MAXDATASIZE - 1 ,0)) == -1){
- perror("recv");
- exit(1);
+while (1)
+{
+    printf("client :");
+    if(fgets(buf,sizeof(buf),stdin)== NULL){
+        break;
+    }
+    buf[strcspn(buf,"\n")] = '\0';
+    if(send(sockfd,buf,strlen(buf),0)== -1){
+        perror("send");
+        break;
+    }
+    if(strcmp(buf,"/quit") == 0){
+        printf("closing connection...\n");
+        break;
+    }
+    memset(buf,0,sizeof(buf));
+    numbytes = recv(sockfd,buf,MAXDATASIZE - 1 , 0);
+
+
+if (numbytes == -1)
+{
+perror("recv");
+break;
+}
+if(numbytes == 0){
+    printf("server disconnectd\n");
+    break;
 }
 buf[numbytes] = '\0';
-printf("client : received '%s'\n",buf);
+printf("server: %s\n",buf);
+if(strcmp(buf,"/quit") == 0){
+    printf("server closed the chat\n");
+    break;
+}
+
+}
 close(sockfd);
 return 0;
-
 }
